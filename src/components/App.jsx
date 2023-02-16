@@ -1,76 +1,40 @@
-import React from 'react';
-import { nanoid } from 'nanoid';
+import React, { useEffect } from 'react';
 
 
 import { useDispatch, useSelector } from 'react-redux';
-import { addContactAction, deleteContactAction, contactsFilterAction } from '../redux/contacts.slice';
 
 
 import styles from './App.module.css';
 import { ContactForm } from '../components/ContactForm/ContactForm';
 import { ContactList } from '../components/ContactList/ContactList';
 import { Filter} from './Filter/Filter';
-import { useMemo } from 'react';
+import { fetchContacts } from 'redux/operations';
+import { selectError, selectIsLoading } from 'redux/selectors';
 
 
 
 
-const App =()=> {
-
+const App = () => {
   const dispatch = useDispatch();
-
-  const filter = useSelector(state => state.filter);
-  const contacts = useSelector(state => state.contacts);
-
-  
-  const addContact = ({ name, number }) => {
-    const Contact = {
-      id: nanoid(),
-      name,
-      number,
-    };
-
-    if (
-      contacts.some(
-        contact => contact.name.toLowerCase() === Contact.name.toLowerCase()
-      )
-    ) {
-      return alert(`${Contact.name} is already in contacts.`);
-    }
-
-    dispatch(addContactAction(Contact));
-
-  };
-
-  const handleDelete = id => {
-    dispatch(deleteContactAction(id));
-
-  }
-
-  const handleUpdateSearch = event => {
-    dispatch(contactsFilterAction(event.target.value));
-   
-  };
-  
+  const isLoading = useSelector(selectIsLoading);
+  const error = useSelector(selectError);
 
   
 
-  const filteredContacts = useMemo(() => {
-    return contacts.filter(contact =>
-      contact.name.toLowerCase().includes(filter.toLowerCase()),
-    );
-  }, [contacts, filter]);
-  
-
+  useEffect(() => {
+    dispatch(fetchContacts());
+  }, [dispatch]);
 
     return (
     <div className={styles.container} >
       <h1>Phonebook</h1>
-      <ContactForm onContact={addContact}/>
+      <ContactForm />
+      {isLoading && !error && <b> Request in progress...</b>}
 
       <h2>Contacts</h2>
-      <Filter value={filter} onChange={handleUpdateSearch} />
-      <ContactList contacts={filteredContacts} onDelete={handleDelete} /> 
+        <Filter />
+        <ContactList /> 
+
     </div>
   );
   
